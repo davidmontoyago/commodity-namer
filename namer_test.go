@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/davidmontoyago/commodity-namer/pkg/namer"
+	namer "github.com/davidmontoyago/commodity-namer"
 )
 
 // Test cases covering various resource naming scenarios
@@ -139,6 +139,30 @@ func TestNewResourceName_WithTruncation(t *testing.T) {
 			resourceType: "rate-limit",
 			maxLength:    20,
 			expected:     "my-prox-fire-rate-l",
+		},
+		{
+			name:         "long backend processor service account",
+			baseName:     "my-prod-stack",
+			serviceName:  "backend-processor",
+			resourceType: "service-account",
+			maxLength:    30,
+			expected:     "my-prod-backend-pr-service-a",
+		},
+		{
+			name:         "long backend processor service account",
+			baseName:     "my-prod-stack",
+			serviceName:  "ingestor",
+			resourceType: "generic-service",
+			maxLength:    25,
+			expected:     "my-prod-inges-generic-s",
+		},
+		{
+			name:         "long require https",
+			baseName:     "my-prod-stack",
+			serviceName:  "require-https",
+			resourceType: "",
+			maxLength:    20,
+			expected:     "my-pro-require-https",
 		},
 	}
 

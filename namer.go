@@ -12,8 +12,8 @@ type Namer struct {
 }
 
 // New creates a new Namer instance with the given base name
-func New(baseName string) *Namer {
-	return &Namer{baseName: baseName}
+func New(baseName string) Namer {
+	return Namer{baseName: baseName}
 }
 
 // NewResourceName generates a consistent resource name with length limits.
