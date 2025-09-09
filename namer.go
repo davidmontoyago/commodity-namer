@@ -17,7 +17,7 @@ func New(baseName string) Namer {
 }
 
 // NewResourceName generates a consistent resource name with length limits.
-func (e *Namer) NewResourceName(resourceName, resourceType string, maxLength int) string {
+func (e Namer) NewResourceName(resourceName, resourceType string, maxLength int) string {
 	var name string
 	if resourceType == "" {
 		name = fmt.Sprintf("%s-%s", e.baseName, resourceName)
@@ -36,7 +36,7 @@ func (e *Namer) NewResourceName(resourceName, resourceType string, maxLength int
 }
 
 // truncateResourceName truncates and handles max length constraints.
-func (e *Namer) truncateResourceName(resourceName, resourceType string, surplus, maxLength int) string {
+func (e Namer) truncateResourceName(resourceName, resourceType string, surplus, maxLength int) string {
 	mainComponentLength := len(e.baseName)
 	if mainComponentLength > surplus {
 		return e.truncateMainComponent(resourceName, resourceType, surplus)
@@ -46,7 +46,7 @@ func (e *Namer) truncateResourceName(resourceName, resourceType string, surplus,
 }
 
 // truncateMainComponent truncates the main component name when it's long enough.
-func (e *Namer) truncateMainComponent(resourceName, resourceType string, surplus int) string {
+func (e Namer) truncateMainComponent(resourceName, resourceType string, surplus int) string {
 	truncatedMainComponent := e.baseName[:len(e.baseName)-surplus]
 	truncatedMainComponent = trimTrailingHyphen(truncatedMainComponent)
 
@@ -58,7 +58,7 @@ func (e *Namer) truncateMainComponent(resourceName, resourceType string, surplus
 }
 
 // proportionalTruncate applies proportional truncation when main component is too short.
-func (e *Namer) proportionalTruncate(resourceName, resourceType string, maxLength int) string {
+func (e Namer) proportionalTruncate(resourceName, resourceType string, maxLength int) string {
 	originalLength := len(join(e.baseName, resourceName, resourceType))
 
 	truncateFactorFloat := float64(maxLength) / float64(originalLength)
