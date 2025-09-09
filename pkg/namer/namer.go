@@ -1,3 +1,4 @@
+// Package namer allows generating consistent resource names with length limits.
 package namer
 
 import (
@@ -16,22 +17,22 @@ func New(baseName string) *Namer {
 }
 
 // NewResourceName generates a consistent resource name with length limits.
-func (e *Namer) NewResourceName(serviceName, resourceType string, maxLength int) string {
-	var resourceName string
+func (e *Namer) NewResourceName(resourceName, resourceType string, maxLength int) string {
+	var name string
 	if resourceType == "" {
-		resourceName = fmt.Sprintf("%s-%s", e.baseName, serviceName)
+		name = fmt.Sprintf("%s-%s", e.baseName, resourceName)
 	} else {
-		resourceName = fmt.Sprintf("%s-%s-%s", e.baseName, serviceName, resourceType)
+		name = fmt.Sprintf("%s-%s-%s", e.baseName, resourceName, resourceType)
 	}
 
-	if len(resourceName) <= maxLength {
-		return resourceName
+	if len(name) <= maxLength {
+		return name
 	}
 
-	surplus := len(resourceName) - maxLength
-	resourceName = e.truncateResourceName(serviceName, resourceType, surplus, maxLength)
+	surplus := len(name) - maxLength
+	name = e.truncateResourceName(resourceName, resourceType, surplus, maxLength)
 
-	return resourceName
+	return name
 }
 
 // truncateResourceName handles the complex logic for truncating resource names.
@@ -47,7 +48,7 @@ func (e *Namer) truncateResourceName(serviceName, resourceType string, surplus, 
 // truncateMainComponent truncates the main component name when it's long enough.
 func (e *Namer) truncateMainComponent(serviceName, resourceType string, surplus int) string {
 	truncatedMainComponent := e.baseName[:len(e.baseName)-surplus]
-	truncatedMainComponent = e.trimTrailingHyphen(truncatedMainComponent)
+	truncatedMainComponent = trimTrailingHyphen(truncatedMainComponent)
 
 	if resourceType == "" {
 		return fmt.Sprintf("%s-%s", truncatedMainComponent, serviceName)
@@ -71,11 +72,15 @@ func (e *Namer) proportionalTruncate(serviceName, resourceType string, maxLength
 	resourceTypeLength := int(math.Floor(float64(len(resourceType)) * truncateFactor))
 
 	// Truncate each component and remove trailing hyphens
-	truncatedBaseName := e.trimTrailingHyphen(e.baseName[:mainComponentLength])
-	truncatedServiceName := e.trimTrailingHyphen(serviceName[:serviceNameLength])
-	truncatedResourceType := e.trimTrailingHyphen(resourceType[:resourceTypeLength])
+	truncatedBaseName := trimTrailingHyphen(e.baseName[:mainComponentLength])
+	truncatedServiceName := trimTrailingHyphen(serviceName[:serviceNameLength])
+	truncatedResourceType := trimTrailingHyphen(resourceType[:resourceTypeLength])
 
-	if resourceType == "" {
+	return join(truncatedBaseName, truncatedServiceName, truncatedResourceType)
+}
+
+func join(truncatedBaseName string, truncatedServiceName string, truncatedResourceType string) string {
+	if truncatedResourceType == "" {
 		return fmt.Sprintf("%s-%s", truncatedBaseName, truncatedServiceName)
 	}
 
@@ -83,9 +88,10 @@ func (e *Namer) proportionalTruncate(serviceName, resourceType string, maxLength
 }
 
 // trimTrailingHyphen removes trailing hyphens from a string component
-func (e *Namer) trimTrailingHyphen(component string) string {
+func trimTrailingHyphen(component string) string {
 	for len(component) > 0 && component[len(component)-1] == '-' {
 		component = component[:len(component)-1]
 	}
+
 	return component
 }

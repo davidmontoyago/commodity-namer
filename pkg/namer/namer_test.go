@@ -1,12 +1,16 @@
-package namer
+package namer_test
 
 import (
 	"strings"
 	"testing"
+
+	"github.com/davidmontoyago/commodity-namer/pkg/namer"
 )
 
 // Test cases covering various resource naming scenarios
 func TestNewResourceName_NoTruncation(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name         string
 		baseName     string
@@ -65,18 +69,21 @@ func TestNewResourceName_NoTruncation(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			namer := New(tt.baseName)
-			result := namer.NewResourceName(tt.serviceName, tt.resourceType, tt.maxLength)
-			if result != tt.expected {
-				t.Errorf("NewResourceName() = %v, want %v", result, tt.expected)
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+			n := namer.New(testCase.baseName)
+			result := n.NewResourceName(testCase.serviceName, testCase.resourceType, testCase.maxLength)
+			if result != testCase.expected {
+				t.Errorf("NewResourceName() = %v, want %v", result, testCase.expected)
 			}
 		})
 	}
 }
 
 func TestNewResourceName_WithTruncation(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name         string
 		baseName     string
@@ -135,25 +142,28 @@ func TestNewResourceName_WithTruncation(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			namer := New(tt.baseName)
-			result := namer.NewResourceName(tt.serviceName, tt.resourceType, tt.maxLength)
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+			n := namer.New(testCase.baseName)
+			result := n.NewResourceName(testCase.serviceName, testCase.resourceType, testCase.maxLength)
 
-			if result != tt.expected {
-				t.Errorf("NewResourceName() = %v, want %v", result, tt.expected)
+			if result != testCase.expected {
+				t.Errorf("NewResourceName() = %v, want %v", result, testCase.expected)
 			}
 
 			// Verify the result doesn't exceed max length
-			if len(result) > tt.maxLength {
+			if len(result) > testCase.maxLength {
 				t.Errorf("NewResourceName() length = %d, want <= %d",
-					len(result), tt.maxLength)
+					len(result), testCase.maxLength)
 			}
 		})
 	}
 }
 
 func TestNewResourceName_EdgeCases(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name         string
 		baseName     string
@@ -204,25 +214,28 @@ func TestNewResourceName_EdgeCases(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			namer := New(tt.baseName)
-			result := namer.NewResourceName(tt.serviceName, tt.resourceType, tt.maxLength)
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+			n := namer.New(testCase.baseName)
+			result := n.NewResourceName(testCase.serviceName, testCase.resourceType, testCase.maxLength)
 
-			if result != tt.expected {
-				t.Errorf("NewResourceName() = %v, want %v", result, tt.expected)
+			if result != testCase.expected {
+				t.Errorf("NewResourceName() = %v, want %v", result, testCase.expected)
 			}
 
 			// Verify the result doesn't exceed max length
-			if len(result) > tt.maxLength {
+			if len(result) > testCase.maxLength {
 				t.Errorf("NewResourceName() length = %d, want <= %d",
-					len(result), tt.maxLength)
+					len(result), testCase.maxLength)
 			}
 		})
 	}
 }
 
 func TestNewResourceName_CommonInfrastructureExamples(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name         string
 		baseName     string
@@ -281,19 +294,20 @@ func TestNewResourceName_CommonInfrastructureExamples(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			namer := New(tt.baseName)
-			result := namer.NewResourceName(tt.serviceName, tt.resourceType, tt.maxLength)
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+			n := namer.New(testCase.baseName)
+			result := n.NewResourceName(testCase.serviceName, testCase.resourceType, testCase.maxLength)
 
-			if result != tt.expected {
-				t.Errorf("NewResourceName() = %v, want %v", result, tt.expected)
+			if result != testCase.expected {
+				t.Errorf("NewResourceName() = %v, want %v", result, testCase.expected)
 			}
 
 			// Verify the result doesn't exceed max length
-			if len(result) > tt.maxLength {
+			if len(result) > testCase.maxLength {
 				t.Errorf("NewResourceName() length = %d, want <= %d",
-					len(result), tt.maxLength)
+					len(result), testCase.maxLength)
 			}
 
 			// Verify no leading/trailing hyphens
@@ -307,12 +321,4 @@ func TestNewResourceName_CommonInfrastructureExamples(t *testing.T) {
 			}
 		})
 	}
-}
-
-// Helper function for minimum calculation
-func min(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
 }
