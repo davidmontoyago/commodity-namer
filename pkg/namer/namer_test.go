@@ -194,6 +194,14 @@ func TestNewResourceName_EdgeCases(t *testing.T) {
 			maxLength:    10,
 			expected:     "a-b-c",
 		},
+		{
+			name:         "hyphenated base name truncation",
+			baseName:     "test-fullstack",
+			serviceName:  "cache",
+			resourceType: "vpc-connector",
+			maxLength:    25,
+			expected:     "test-cache-vpc-connector",
+		},
 	}
 
 	for _, tt := range tests {
@@ -214,7 +222,7 @@ func TestNewResourceName_EdgeCases(t *testing.T) {
 	}
 }
 
-func TestNewResourceName_RealInfrastructureExamples(t *testing.T) {
+func TestNewResourceName_CommonInfrastructureExamples(t *testing.T) {
 	tests := []struct {
 		name         string
 		baseName     string

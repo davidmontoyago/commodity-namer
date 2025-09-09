@@ -47,6 +47,8 @@ func (e *Namer) truncateResourceName(serviceName, resourceType string, surplus, 
 // truncateMainComponent truncates the main component name when it's long enough.
 func (e *Namer) truncateMainComponent(serviceName, resourceType string, surplus int) string {
 	truncatedMainComponent := e.baseName[:len(e.baseName)-surplus]
+	truncatedMainComponent = e.trimTrailingHyphen(truncatedMainComponent)
+
 	if resourceType == "" {
 		return fmt.Sprintf("%s-%s", truncatedMainComponent, serviceName)
 	}
@@ -68,9 +70,22 @@ func (e *Namer) proportionalTruncate(serviceName, resourceType string, maxLength
 	serviceNameLength := int(math.Floor(float64(len(serviceName)) * truncateFactor))
 	resourceTypeLength := int(math.Floor(float64(len(resourceType)) * truncateFactor))
 
+	// Truncate each component and remove trailing hyphens
+	truncatedBaseName := e.trimTrailingHyphen(e.baseName[:mainComponentLength])
+	truncatedServiceName := e.trimTrailingHyphen(serviceName[:serviceNameLength])
+	truncatedResourceType := e.trimTrailingHyphen(resourceType[:resourceTypeLength])
+
 	if resourceType == "" {
-		return fmt.Sprintf("%s-%s", e.baseName[:mainComponentLength], serviceName[:serviceNameLength])
+		return fmt.Sprintf("%s-%s", truncatedBaseName, truncatedServiceName)
 	}
 
-	return fmt.Sprintf("%s-%s-%s", e.baseName[:mainComponentLength], serviceName[:serviceNameLength], resourceType[:resourceTypeLength])
+	return fmt.Sprintf("%s-%s-%s", truncatedBaseName, truncatedServiceName, truncatedResourceType)
+}
+
+// trimTrailingHyphen removes trailing hyphens from a string component
+func (e *Namer) trimTrailingHyphen(component string) string {
+	for len(component) > 0 && component[len(component)-1] == '-' {
+		component = component[:len(component)-1]
+	}
+	return component
 }
