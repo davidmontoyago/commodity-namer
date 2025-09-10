@@ -6,20 +6,46 @@ import (
 	"log/slog"
 	"math"
 	"regexp"
+	"strings"
 )
 
 // Namer provides consistent resource naming with length constraints
 type Namer struct {
 	baseName string
+	// If true, periods and underscores will be replaced with dashes
+	replace bool
 }
 
+// Option is a function that can be used to configure the Namer
+type Option func(*Namer)
+
 // New creates a new Namer instance with the given base name
-func New(baseName string) Namer {
-	return Namer{baseName: baseName}
+func New(baseName string, opts ...Option) Namer {
+	n := Namer{baseName: baseName}
+	for _, opt := range opts {
+		opt(&n)
+	}
+
+	return n
+}
+
+// WithReplace replaces periods with dashes
+func WithReplace() Option {
+	return func(n *Namer) {
+		n.replace = true
+	}
 }
 
 // NewResourceName generates a consistent resource name with length limits.
 func (e Namer) NewResourceName(resourceName, resourceType string, maxLength int) string {
+	// replace common characters on resource name and type parts
+	if e.replace {
+		resourceName = strings.ReplaceAll(resourceName, ".", "-")
+		resourceName = strings.ReplaceAll(resourceName, "_", "-")
+		resourceType = strings.ReplaceAll(resourceType, ".", "-")
+		resourceType = strings.ReplaceAll(resourceType, "_", "-")
+	}
+
 	var name string
 	if resourceType == "" {
 		name = fmt.Sprintf("%s-%s", e.baseName, resourceName)

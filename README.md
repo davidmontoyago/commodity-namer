@@ -12,6 +12,7 @@ Consistent structured resource names for automated infra:
   - Can contain letters, digits, and hyphens as interior characters
   - Must end with a letter or digit (cannot end with a hyphen)
   - Maximum length of 63 characters
+- option `WithReplace`  to auto replace periods and underscores
 
 See:
 - https://cloud.google.com/compute/docs/naming-resources

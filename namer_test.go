@@ -442,3 +442,200 @@ func TestNewResourceName_InvalidName(t *testing.T) {
 		})
 	}
 }
+
+func TestNewResourceName_WithReplace(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name         string
+		baseName     string
+		serviceName  string
+		resourceType string
+		maxLength    int
+		expected     string
+		description  string
+	}{
+		{
+			name:         "replace periods in service name",
+			baseName:     "app",
+			serviceName:  "user.auth.service",
+			resourceType: "instance",
+			maxLength:    50,
+			expected:     "app-user-auth-service-instance",
+			description:  "should replace periods with dashes in service name",
+		},
+		{
+			name:         "replace underscores in service name",
+			baseName:     "app",
+			serviceName:  "user_auth_service",
+			resourceType: "instance",
+			maxLength:    50,
+			expected:     "app-user-auth-service-instance",
+			description:  "should replace underscores with dashes in service name",
+		},
+		{
+			name:         "replace periods in resource type",
+			baseName:     "app",
+			serviceName:  "service",
+			resourceType: "cloud.sql.instance",
+			maxLength:    50,
+			expected:     "app-service-cloud-sql-instance",
+			description:  "should replace periods with dashes in resource type",
+		},
+		{
+			name:         "replace underscores in resource type",
+			baseName:     "app",
+			serviceName:  "service",
+			resourceType: "cloud_sql_instance",
+			maxLength:    50,
+			expected:     "app-service-cloud-sql-instance",
+			description:  "should replace underscores with dashes in resource type",
+		},
+		{
+			name:         "mixed periods and underscores in service name",
+			baseName:     "app",
+			serviceName:  "user.auth_service",
+			resourceType: "instance",
+			maxLength:    50,
+			expected:     "app-user-auth-service-instance",
+			description:  "should replace both periods and underscores in service name",
+		},
+		{
+			name:         "mixed periods and underscores in resource type",
+			baseName:     "app",
+			serviceName:  "service",
+			resourceType: "cloud.sql_instance",
+			maxLength:    50,
+			expected:     "app-service-cloud-sql-instance",
+			description:  "should replace both periods and underscores in resource type",
+		},
+		{
+			name:         "periods and underscores in both service name and type",
+			baseName:     "app",
+			serviceName:  "user.auth_service",
+			resourceType: "cloud.sql_instance",
+			maxLength:    50,
+			expected:     "app-user-auth-service-cloud-sql-instance",
+			description:  "should replace periods and underscores in both service name and type",
+		},
+		{
+			name:         "base name with periods and underscores unchanged",
+			baseName:     "valid-base-name",
+			serviceName:  "user.service",
+			resourceType: "cloud_instance",
+			maxLength:    50,
+			expected:     "valid-base-name-user-service-cloud-instance",
+			description:  "should NOT replace periods and underscores in base name (but service name and type should be replaced)",
+		},
+		{
+			name:         "multiple consecutive periods and underscores",
+			baseName:     "app",
+			serviceName:  "user..auth__service",
+			resourceType: "cloud..sql__instance",
+			maxLength:    50,
+			expected:     "app-user--auth--service-cloud--sql--instance",
+			description:  "should replace consecutive periods and underscores with consecutive dashes",
+		},
+		{
+			name:         "empty resource type with replacements",
+			baseName:     "app",
+			serviceName:  "user.auth_service",
+			resourceType: "",
+			maxLength:    50,
+			expected:     "app-user-auth-service",
+			description:  "should handle empty resource type with replacements in service name",
+		},
+		{
+			name:         "replace with truncation",
+			baseName:     "longapp",
+			serviceName:  "very.long.complex_service_name",
+			resourceType: "cloud.sql.instance.type",
+			maxLength:    25,
+			expected:     "lo-very-long-co-cloud-sql",
+			description:  "should apply replacements before truncation",
+		},
+		{
+			name:         "domain-like service names",
+			baseName:     "api",
+			serviceName:  "auth.example.com",
+			resourceType: "lb_instance",
+			maxLength:    50,
+			expected:     "api-auth-example-com-lb-instance",
+			description:  "should handle domain-like naming patterns in service name",
+		},
+		{
+			name:         "file path like service names",
+			baseName:     "app",
+			serviceName:  "path.to.service",
+			resourceType: "config_file_backup",
+			maxLength:    50,
+			expected:     "app-path-to-service-config-file-backup",
+			description:  "should handle file path like naming patterns",
+		},
+		{
+			name:         "no periods or underscores to replace",
+			baseName:     "app",
+			serviceName:  "clean-service-name",
+			resourceType: "clean-instance-type",
+			maxLength:    50,
+			expected:     "app-clean-service-name-clean-instance-type",
+			description:  "should work normally when no replacements are needed",
+		},
+		{
+			name:         "only periods in service name",
+			baseName:     "app",
+			serviceName:  "namespace.service.name",
+			resourceType: "instance",
+			maxLength:    50,
+			expected:     "app-namespace-service-name-instance",
+			description:  "should replace only periods when no underscores present",
+		},
+		{
+			name:         "only underscores in resource type",
+			baseName:     "app",
+			serviceName:  "service",
+			resourceType: "database_connection_pool",
+			maxLength:    50,
+			expected:     "app-service-database-connection-pool",
+			description:  "should replace only underscores when no periods present",
+		},
+	}
+
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			n := namer.New(testCase.baseName, namer.WithReplace())
+			result := n.NewResourceName(testCase.serviceName, testCase.resourceType, testCase.maxLength)
+
+			if result != testCase.expected {
+				t.Errorf("NewResourceName() = %v, want %v (%s)", result, testCase.expected, testCase.description)
+			}
+
+			// Verify the result doesn't exceed max length
+			if len(result) > testCase.maxLength {
+				t.Errorf("NewResourceName() length = %d, want <= %d", len(result), testCase.maxLength)
+			}
+
+			// Verify no periods or underscores remain in service name and resource type parts
+			// (but they may remain in base name)
+			parts := strings.Split(result, "-")
+			if len(parts) >= 2 {
+				// Check service name part and resource type part (skip base name part)
+				for i := 1; i < len(parts); i++ {
+					if strings.Contains(parts[i], ".") {
+						t.Errorf("NewResourceName() part %d = %s, should not contain periods after replace", i, parts[i])
+					}
+					if strings.Contains(parts[i], "_") {
+						t.Errorf("NewResourceName() part %d = %s, should not contain underscores after replace", i, parts[i])
+					}
+				}
+			}
+
+			// Verify no leading/trailing hyphens
+			if strings.HasPrefix(result, "-") || strings.HasSuffix(result, "-") {
+				t.Errorf("NewResourceName() = %s, should not have leading/trailing hyphens", result)
+			}
+		})
+	}
+}
