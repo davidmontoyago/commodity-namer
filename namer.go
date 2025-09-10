@@ -3,7 +3,9 @@ package namer
 
 import (
 	"fmt"
+	"log/slog"
 	"math"
+	"regexp"
 )
 
 // Namer provides consistent resource naming with length constraints
@@ -25,14 +27,37 @@ func (e Namer) NewResourceName(resourceName, resourceType string, maxLength int)
 		name = fmt.Sprintf("%s-%s-%s", e.baseName, resourceName, resourceType)
 	}
 
-	if len(name) <= maxLength {
-		return name
+	if len(name) > maxLength {
+		surplus := len(name) - maxLength
+		name = e.truncateResourceName(resourceName, resourceType, surplus, maxLength)
 	}
 
-	surplus := len(name) - maxLength
-	name = e.truncateResourceName(resourceName, resourceType, surplus, maxLength)
+	if ok, err := isValidName(name); !ok {
+		slog.Error("Not a valid resource name", "name", name, "error", err)
+		panic("Resource name must start with a letter and end with a letter or digit")
+	}
 
 	return name
+}
+
+// isValidName validates the final name in accord with RFC 1035.
+// See: https://cloud.google.com/compute/docs/naming-resources
+func isValidName(name string) (ok bool, err error) {
+	// validate final name in accord with RFC 1035:
+	// - Must start with a letter
+	// - Can contain letters, digits, and hyphens as interior characters
+	// - Must end with a letter or digit (cannot end with a hyphen)
+	// - Maximum length of 63 characters
+	matched, _ := regexp.MatchString("^[a-z]([-a-z0-9]*[a-z0-9])?$", name)
+	if !matched {
+		return false, fmt.Errorf("name must start with a letter and end with a letter or digit")
+	}
+
+	if len(name) > 63 {
+		return false, fmt.Errorf("name must be less than 63 characters")
+	}
+
+	return true, nil
 }
 
 // truncateResourceName truncates and handles max length constraints.

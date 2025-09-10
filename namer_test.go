@@ -346,3 +346,99 @@ func TestNewResourceName_CommonInfrastructureExamples(t *testing.T) {
 		})
 	}
 }
+
+func TestNewResourceName_InvalidName(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name         string
+		baseName     string
+		serviceName  string
+		resourceType string
+		maxLength    int
+		expectPanic  bool
+		description  string
+	}{
+		{
+			name:         "name starts with hyphen",
+			baseName:     "-invalid",
+			serviceName:  "service",
+			resourceType: "type",
+			maxLength:    50,
+			expectPanic:  true,
+			description:  "should panic when name starts with hyphen",
+		},
+		{
+			name:         "name ends with hyphen",
+			baseName:     "invalid",
+			serviceName:  "service",
+			resourceType: "type-",
+			maxLength:    50,
+			expectPanic:  true,
+			description:  "should panic when name ends with hyphen",
+		},
+		{
+			name:         "name starts with digit",
+			baseName:     "9invalid",
+			serviceName:  "service",
+			resourceType: "type",
+			maxLength:    50,
+			expectPanic:  true,
+			description:  "should panic when name starts with digit",
+		},
+		{
+			name:         "name with uppercase letters",
+			baseName:     "Invalid",
+			serviceName:  "service",
+			resourceType: "type",
+			maxLength:    50,
+			expectPanic:  true,
+			description:  "should panic when name contains uppercase letters",
+		},
+		{
+			name:         "name with special characters",
+			baseName:     "invalid_name",
+			serviceName:  "service",
+			resourceType: "type",
+			maxLength:    50,
+			expectPanic:  true,
+			description:  "should panic when name contains special characters",
+		},
+		{
+			name:         "name exceeds length limit",
+			baseName:     "a-very-very-very-very-very-very-very-very-long-base-name",
+			serviceName:  "service",
+			resourceType: "type",
+			maxLength:    70,
+			expectPanic:  true,
+			description:  "should panic when name exceeds RFC 1035 limit of 63 characters",
+		},
+	}
+
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			defer func() {
+				if r := recover(); r != nil {
+					if !testCase.expectPanic {
+						t.Errorf("Unexpected panic: %v", r)
+					}
+					// Expected panic occurred
+				} else {
+					if testCase.expectPanic {
+						t.Errorf("Expected panic but none occurred for: %s", testCase.description)
+					}
+				}
+			}()
+
+			n := namer.New(testCase.baseName)
+			result := n.NewResourceName(testCase.serviceName, testCase.resourceType, testCase.maxLength)
+
+			// If we reach here and expectPanic is true, the test should fail
+			if testCase.expectPanic {
+				t.Errorf("Expected panic but got result: %s", result)
+			}
+		})
+	}
+}

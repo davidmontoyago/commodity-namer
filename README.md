@@ -2,7 +2,19 @@
 
 [![Develop](https://github.com/davidmontoyago/commodity-namer/actions/workflows/develop.yaml/badge.svg)](https://github.com/davidmontoyago/commodity-namer/actions/workflows/develop.yaml) [![Go Coverage](https://raw.githubusercontent.com/wiki/davidmontoyago/commodity-namer/coverage.svg)](https://raw.githack.com/wiki/davidmontoyago/commodity-namer/coverage.html) [![Go Reference](https://pkg.go.dev/badge/github.com/davidmontoyago/commodity-namer.svg)](https://pkg.go.dev/github.com/davidmontoyago/commodity-namer)
 
-Consistent structured naming for infra resources.
+Consistent structured resource names for automated infra:
+
+- prefix all resource names
+- add context with optional "resource type"
+- truncate name parts proportionally to ensure max length
+- enforce RFC 1035:
+  - Must start with a letter
+  - Can contain letters, digits, and hyphens as interior characters
+  - Must end with a letter or digit (cannot end with a hyphen)
+  - Maximum length of 63 characters
+
+See:
+- https://cloud.google.com/compute/docs/naming-resources
 
 ### Getting started
 
@@ -22,11 +34,11 @@ func NewMyInfra() *MyInfra {
 }
 
 func (y *MyInfra) deploy() {
-  name := y.NewResourceName("orders", "bucket", 64) // my-prod-stack-orders-bucket
+  name := y.NewResourceName("orders", "bucket", 63) // my-prod-stack-orders-bucket
   ...
-  name = y.NewResourceName("orders", "cache", 64) // my-prod-stack-orders-bucket
+  name = y.NewResourceName("orders", "cache", 63) // my-prod-stack-orders-cache
   ...
-  name = y.NewResourceName("pending-work", "queue", 64) // my-prod-stack-pending-work-queue
+  name = y.NewResourceName("pending-work", "queue", 63) // my-prod-stack-pending-work-queue
   ...
   name = y.NewResourceName("backend-processor", "service-account", 30) // my-prod-backend-pr-service-a
   ...
