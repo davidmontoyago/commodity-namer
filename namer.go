@@ -44,6 +44,10 @@ func (e Namer) NewResourceName(resourceName, resourceType string, maxLength int)
 		resourceName = strings.ReplaceAll(resourceName, "_", "-")
 		resourceType = strings.ReplaceAll(resourceType, ".", "-")
 		resourceType = strings.ReplaceAll(resourceType, "_", "-")
+
+		// convert to lowercase
+		resourceName = strings.ToLower(resourceName)
+		resourceType = strings.ToLower(resourceType)
 	}
 
 	var name string
