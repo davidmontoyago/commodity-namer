@@ -40,14 +40,7 @@ func WithReplace() Option {
 func (e Namer) NewResourceName(resourceName, resourceType string, maxLength int) string {
 	// replace common characters on resource name and type parts
 	if e.replace {
-		resourceName = strings.ReplaceAll(resourceName, ".", "-")
-		resourceName = strings.ReplaceAll(resourceName, "_", "-")
-		resourceType = strings.ReplaceAll(resourceType, ".", "-")
-		resourceType = strings.ReplaceAll(resourceType, "_", "-")
-
-		// convert to lowercase
-		resourceName = strings.ToLower(resourceName)
-		resourceType = strings.ToLower(resourceType)
+		resourceName, resourceType = applyReplacements(resourceName, resourceType)
 	}
 
 	var name string
@@ -68,6 +61,22 @@ func (e Namer) NewResourceName(resourceName, resourceType string, maxLength int)
 	}
 
 	return name
+}
+
+// applyReplacements replaces common characters and converts to lowercase
+func applyReplacements(resourceName string, resourceType string) (string, string) {
+	resourceName = strings.ReplaceAll(resourceName, ".", "-")
+	resourceName = strings.ReplaceAll(resourceName, "_", "-")
+	resourceType = strings.ReplaceAll(resourceType, ".", "-")
+	resourceType = strings.ReplaceAll(resourceType, "_", "-")
+	resourceName = strings.ReplaceAll(resourceName, "/", "-")
+	resourceType = strings.ReplaceAll(resourceType, "/", "-")
+
+	// convert to lowercase
+	resourceName = strings.ToLower(resourceName)
+	resourceType = strings.ToLower(resourceType)
+
+	return resourceName, resourceType
 }
 
 // isValidName validates the final name in accord with RFC 1035.
