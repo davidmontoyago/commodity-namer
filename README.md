@@ -20,11 +20,13 @@ See:
 ### Getting started
 
 ```go
-import "github.com/davidmontoyago/commodity-namer"
+import (
+  namer "github.com/davidmontoyago/commodity-namer"
+)
 
 type MyInfra struct {
   // Embed the namer
-  Namer
+  namer.Namer
 }
 
 func NewMyInfra() *MyInfra {
