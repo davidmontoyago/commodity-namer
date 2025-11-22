@@ -734,6 +734,24 @@ func TestNewResourceName_WithReplace(t *testing.T) {
 			expected:     "registry-myorg-myapp-container-image",
 			description:  "should handle Docker image-style naming patterns",
 		},
+		{
+			name:         "test resource names with IAM members email handles like example@example.com",
+			baseName:     "test-iam",
+			serviceName:  "member-user@example.com",
+			resourceType: "binding",
+			maxLength:    63,
+			expected:     "test-iam-member-user-example-com-binding",
+			description:  "should replace '@' characters and dots with dashes",
+		},
+		{
+			name:         "test resource names with IAM group handles like group:team@example.com",
+			baseName:     "iam",
+			serviceName:  "iam-perms-group:team@example.com",
+			resourceType: "binding",
+			maxLength:    40,
+			expected:     "ia-iam-perms-group-team-example-bindin",
+			description:  "should replace ':' characters and '@' characters with dashes",
+		},
 	}
 
 	for _, testCase := range tests {

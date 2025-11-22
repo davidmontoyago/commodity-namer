@@ -12,7 +12,7 @@ import (
 // Namer provides consistent resource naming with length constraints
 type Namer struct {
 	baseName string
-	// If true, periods and underscores will be replaced with dashes
+	// If true, any invalid characters will be replaced with dashes
 	replace bool
 }
 
@@ -71,6 +71,10 @@ func applyReplacements(resourceName string, resourceType string) (string, string
 	resourceType = strings.ReplaceAll(resourceType, "_", "-")
 	resourceName = strings.ReplaceAll(resourceName, "/", "-")
 	resourceType = strings.ReplaceAll(resourceType, "/", "-")
+	resourceName = strings.ReplaceAll(resourceName, "@", "-")
+	resourceType = strings.ReplaceAll(resourceType, "@", "-")
+	resourceName = strings.ReplaceAll(resourceName, ":", "-")
+	resourceType = strings.ReplaceAll(resourceType, ":", "-")
 
 	// convert to lowercase
 	resourceName = strings.ToLower(resourceName)
